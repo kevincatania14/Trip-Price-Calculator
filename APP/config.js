@@ -1,0 +1,1 @@
+const api_prefix = 'http://localhost/trip_price_calculator/api/controllers/';

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Price Calculator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+  <div class="container">
+    <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom text-left">   
+    <h1 class="text-left">Trip Price Calculator</h1>
+    </header>
+  </div>   
+
+  <div class="container-fluid">
+    <form class="col-md-6 offset-md-4" id="form_trip_calculator">
+      <div class="form-group row">
+        <label for="currency" class="col-sm-2 col-form-label">Currency</label>
+        <div class="col-sm-6">
+          <select id="currency" class="form-control" required>
+            <option value="EUR" selected>EUR</option>
+            <option value="USD">USD</option>
+            <option value="GBP">GBP</option>
+            </select>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="age" class="col-sm-2 col-form-label">Age</label>
+        <div class="col-sm-6">
+          <input type="text" class="form-control" id="age" placeholder="e.g. 25 or 25,35" value="25,35" required>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="startDate" class="col-sm-2 col-form-label">Start Date</label>
+        <div class="col-sm-6">
+          <input type="date" class="form-control" id="startDate" placeholder="e.g. 2020-10-01" value="2020-10-01" required>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="endDate" class="col-sm-2 col-form-label">End Date</label>
+        <div class="col-sm-6">
+          <input type="date" class="form-control" id="endDate" placeholder="e.g. 2020-10-30" value="2020-10-30" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Get Quote</button>            
+    </form>
+
+    <br/>
+    <div id="success_container" class="alert alert-success col-md-4 offset-md-4" role="alert" style="display: none;">
+      <h4 id="success_line_1" class="alert-heading">Quote #123</h4>
+      <p id="success_line_2">Estimate: EUR 123</p>
+      <hr>
+      <p id="success_line_3" class="mb-0">Ref #123 for inquiries</p>
+    </div>
+
+    <div id="error_container" class="alert alert-danger col-md-4 offset-md-4" role="alert" style="display: none;">
+      <h4 id="error_line_1" class="alert-heading">Errors</h4>
+      <p id="error_line_2">... error ...</p>
+      <hr>
+      <p id="error_line_3" class="mb-0">Check input</p>
+    </div>
+</div>
+
+<div class="container">
+  <footer class="fixed-bottom">
+    <ul class="nav justify-content-center border-bottom pb-3 mb-3"></ul>
+    <p class="text-center text-body-secondary">&copy; 2024 - Developed by Kevin Catania</p>
+  </footer>
+</div>
+
+<script type="text/javascript" src="config.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script type-="text/javscript">
+$(document).ready(function() {
+  $('#form_trip_calculator').on('submit', function(event) {
+      event.preventDefault(); /* preventing default form submission */
+
+      /* form data */
+      var currency = $('#currency').val();
+      var age = $('#age').val();
+      var startDate = $('#startDate').val();
+      var endDate = $('#endDate').val();
+
+      /* start date cannot be after end date */
+      // if (new Date(startDate) > new Date(endDate)) {
+      //     alert('Start date cannot be after end date');
+      //     return;
+      // }
+
+      $.ajax({
+        url: api_prefix + 'tripcalculator/quotation.php', /* endpoint */
+        type: 'POST',
+        data: {
+            currency_id: currency,
+            age,
+            start_date: startDate,
+            end_date: endDate
+        },
+        dataType: "json",
+        success: function(response) {
+            $('#success_container').show();
+            $('#error_container').hide();
+
+            /* retrieving dom for success message */
+            var successLine1 = $('#success_line_1');
+            var successLine2 = $('#success_line_2');
+            var successLine3 = $('#success_line_3');
+
+            /* clearing dom for success message */
+            successLine1.empty();
+            successLine2.empty();
+            successLine3.empty();
+
+            /* json object {} */
+            var resultSuccessLine1 = $('<h4></h4>').text(
+                'Quote #' + response.quotation_id
+            );
+
+            var resultSuccessLine2 = $('<p></p>').text(
+                'Estimate: ' + response.currency_id + ' ' + response.total
+            );
+
+            var resultSuccessLine3 = $('<p></p>').text(
+                'Ref #' + response.quotation_id + ' for inquiries'
+            );
+
+            /* updating dom with success message */
+            successLine1.append(resultSuccessLine1);
+            successLine2.append(resultSuccessLine2);
+            successLine3.append(resultSuccessLine3);
+        },
+        error: function(xhr, status, error) {                            
+          $('#error_container').show();
+          $('#success_container').hide();
+          
+          var errorLine2 = $('#error_line_2'); /* retrieving dom for error message */
+          errorLine2.empty(); /* clearing dom for error message */
+
+          /* json array [{}] */
+          JSON.parse(xhr.responseText).forEach(function(item) {
+              var resultErrorLine2 = $('<p></p>').text(
+                  item.description
+              );
+              errorLine2.append(resultErrorLine2); /* updating dom with error message */
+          });
+        }
+    });
+  });
+});
+</script>
+</body>
+</html>
